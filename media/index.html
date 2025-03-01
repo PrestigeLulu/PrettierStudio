@@ -3,9 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Prettier Studio</title>
+    <link rel="stylesheet" href="{{styleUri}}" />
   </head>
-  <body>
-    <h1>TEST</h1>
+  <body class="vscode-body">
+    <div class="container">
+      <div id="settings" class="settings"></div>
+      <vscode-button id="howdy">Howdy!</vscode-button>
+
+      <div class="code-preview">
+        <pre id="formattedCode"></pre>
+      </div>
+    </div>
+    <script type="module" src="{{toolkitUri}}"></script>
+    <script src="{{scriptUri}}"></script>
   </body>
 </html>

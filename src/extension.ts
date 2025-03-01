@@ -1,10 +1,12 @@
 import * as vscode from 'vscode'
-import * as path from 'path'
+import * as prettier from 'prettier'
 import * as fs from 'fs'
+import * as path from 'path'
 
 export function activate(context: vscode.ExtensionContext) {
   console.log('🎉 Prettier Studio Activated!')
 
+  // 📌 Status Bar 버튼 생성
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100,
@@ -12,8 +14,9 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarItem.command = 'prettier-studio.openSettings'
   statusBarItem.text = '⚙️ Prettier Studio'
   statusBarItem.tooltip = 'Prettier 설정 편집'
-  statusBarItem.hide()
+  statusBarItem.hide() // 처음에는 숨김
 
+  // 📌 Prettier 설정 파일 여부 확인 함수
   function updateStatusBar(editor: vscode.TextEditor | undefined) {
     if (editor && isPrettierConfigFile(editor.document.fileName)) {
       statusBarItem.show()
@@ -28,6 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
     )
   }
 
+  // 📌 현재 활성화된 편집기에 따라 상태 업데이트
   updateStatusBar(vscode.window.activeTextEditor)
   vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
   vscode.workspace.onDidOpenTextDocument(() =>
@@ -43,40 +47,73 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.ViewColumn.One,
         { enableScripts: true },
       )
-
-      // media 폴더에 있는 파일들의 Webview URI 생성
-      const mediaPath = vscode.Uri.file(
-        path.join(context.extensionPath, 'media'),
+      const styleUri = panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, 'media', 'styles.css'),
       )
-      const mediaUri = panel.webview.asWebviewUri(mediaPath)
+      const scriptUri = panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(context.extensionUri, 'media', 'script.js'),
+      )
+      const toolkitUri = panel.webview.asWebviewUri(
+        vscode.Uri.joinPath(
+          context.extensionUri,
+          'node_modules',
+          '@vscode/webview-ui-toolkit',
+          'dist',
+          'toolkit.js',
+        ),
+      )
 
-      // HTML 파일을 읽어서 Webview에 로드
       const indexPath = path.join(context.extensionPath, 'media', 'index.html')
       let htmlContent = fs.readFileSync(indexPath, 'utf8')
 
-      // Webview에서 로드할 파일들의 URL을 변환
+      htmlContent = htmlContent.replace(/{{styleUri}}/g, styleUri.toString())
+      htmlContent = htmlContent.replace(/{{scriptUri}}/g, scriptUri.toString())
       htmlContent = htmlContent.replace(
-        /{{styleUri}}/g,
-        panel.webview
-          .asWebviewUri(
-            vscode.Uri.file(
-              path.join(context.extensionPath, 'media', 'style.css'),
-            ),
-          )
-          .toString(),
-      )
-      htmlContent = htmlContent.replace(
-        /{{scriptUri}}/g,
-        panel.webview
-          .asWebviewUri(
-            vscode.Uri.file(
-              path.join(context.extensionPath, 'media', 'script.js'),
-            ),
-          )
-          .toString(),
+        /{{toolkitUri}}/g,
+        toolkitUri.toString(),
       )
 
       panel.webview.html = htmlContent
+
+      try {
+        const prettierSupportInfo = await prettier.getSupportInfo()
+        const prettierOptions = prettierSupportInfo.options
+
+        console.log('✅ Prettier 지원 설정 목록:', prettierOptions)
+
+        panel.webview.postMessage({
+          type: 'loadPrettierOptions',
+          options: prettierOptions,
+        })
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          '❌ Prettier 설정을 가져오는 중 오류 발생: ' + error,
+        )
+      }
+
+      panel.webview.onDidReceiveMessage(async (message) => {
+        if (message.type === 'formatCode') {
+          try {
+            const exampleCode = `function helloWorld() {
+  console.log("Hello, world!");
+}`
+
+            const formatted = await prettier.format(exampleCode, {
+              parser: 'babel',
+              ...message.config,
+            })
+
+            panel.webview.postMessage({
+              type: 'formattedCode',
+              code: formatted,
+            })
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              'Prettier formatting error: ' + error,
+            )
+          }
+        }
+      })
     },
   )
 

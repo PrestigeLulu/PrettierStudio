@@ -1,0 +1,60 @@
+body {
+  font-family: var(--vscode-font-family);
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.settings {
+  width: 50%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prettier-studio-label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.code-preview {
+  width: 50%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.vscode-panel {
+  background-color: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 5px;
+  padding: 15px;
+  width: 40%;
+}
+
+pre {
+  background: var(--vscode-editor-background);
+  padding: 10px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+}
+
+button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
