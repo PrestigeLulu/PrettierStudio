@@ -1,0 +1,28 @@
+{
+  "name": "prettier-studio",
+  "displayName": "Prettier Studio",
+  "description": "Easily preview and modify Prettier settings.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "main": "./dist/extension.js",
+  "author": "루루 <alsrb4171@gmail.com>",
+  "license": "MIT",
+  "__activationEvents__": [
+    "onCommand:prettier-studio.helloWorld"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "prettier-studio.helloWorld",
+        "title": "Hello Prettier Studio"
+      }
+    ]
+  },
+  "devDependencies": {
+    "prettier": "^3.5.2",
+    "typescript": "^5.8.2",
+    "vscode": "^1.1.37"
+  }
+}
