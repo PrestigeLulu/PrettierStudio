@@ -9,14 +9,14 @@
   "main": "./dist/extension.js",
   "author": "루루 <alsrb4171@gmail.com>",
   "license": "MIT",
-  "__activationEvents__": [
-    "onCommand:prettier-studio.helloWorld"
+  "activationEvents": [
+    "onStartupFinished"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "prettier-studio.helloWorld",
-        "title": "Hello Prettier Studio"
+        "command": "prettier-studio.openSettings",
+        "title": "Prettier Studio Open Setting"
       }
     ]
   },
