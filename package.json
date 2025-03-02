@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@types/vscode": "^1.97.0",
-    "@vscode/webview-ui-toolkit": "^1.4.0"
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "highlight.js": "^11.11.1"
   }
 }

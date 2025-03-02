@@ -13,8 +13,12 @@ window.addEventListener('message', (event) => {
   }
 
   // 📌 Prettier 포맷 결과 업데이트
-  if (message.type === 'formattedCode') {
-    document.getElementById('formattedCode').textContent = message.code
+  if (event.data.type === 'formattedCode') {
+    console.log('✅ Prettier가 반환한 포맷팅 결과:', event.data.code)
+
+    const codeBlock = document.getElementById('formattedCode')
+    codeBlock.textContent = event.data.code
+    hljs.highlightElement(codeBlock) // ✨ 하이라이팅 적용
   }
 })
 
@@ -23,7 +27,7 @@ function generateSettingsUI(options) {
   const settingsContainer = document.getElementById('settings')
 
   // 📌 options를 type에 따라 정렬
-  options.sort((a, b) => a.type.localeCompare(b.type))
+  options.sort((a, b) => b.type.localeCompare(a.type))
 
   options.forEach((option) => {
     const label = document.createElement('label')
@@ -32,19 +36,18 @@ function generateSettingsUI(options) {
 
     let input
     if (option.type === 'boolean') {
-      input = document.createElement('input')
-      input.type = 'checkbox'
+      input = document.createElement('vscode-checkbox')
       input.checked = option.default
     } else if (option.type === 'int') {
-      input = document.createElement('input')
+      input = document.createElement('vscode-text-field')
       input.type = 'number'
       input.value = option.default
       input.min = option.range ? option.range.start : 0
       input.max = option.range ? option.range.end : 10
     } else if (option.type === 'choice') {
-      input = document.createElement('select')
+      input = document.createElement('vscode-dropdown')
       option.choices.forEach((choice) => {
-        const opt = document.createElement('option')
+        const opt = document.createElement('vscode-option')
         opt.value = choice.value
         opt.textContent = choice.value
         input.appendChild(opt)
@@ -56,31 +59,31 @@ function generateSettingsUI(options) {
 
     input.dataset.option = option.name
     label.appendChild(input)
-    settingsContainer.appendChild(label)
-  })
+    settingsContainer.insertBefore(label, settingsContainer.firstChild)
 
-  // Apply 버튼 추가
-  const applyButton = document.createElement('button')
-  applyButton.textContent = 'Apply Settings'
-  applyButton.addEventListener('click', applySettings)
-  settingsContainer.appendChild(applyButton)
+    // 📌 입력값 변경 시 포맷 요청
+    input.addEventListener('change', formatCode)
+  })
 }
 
-// 설정 변경 적용
-function applySettings() {
-  const inputs = document.querySelectorAll('#settings input, #settings select')
-  inputs.forEach((input) => {
-    const optionName = input.dataset.option
-    if (input.type === 'checkbox') {
-      prettierConfig[optionName] = input.checked
-    } else if (input.type === 'number') {
-      prettierConfig[optionName] = parseInt(input.value)
-    } else {
-      prettierConfig[optionName] = input.value
-    }
-  })
+function formatCode(event) {
+  const input = event.target
+  const optionName = input.dataset.option
 
-  // 설정을 VS Code 확장으로 전송
+  if (!optionName) return // 🌟 예외 처리
+  const type = input.tagName.toLowerCase()
+
+  if (type === 'vscode-checkbox') {
+    prettierConfig[optionName] = input.checked
+  } else if (type === 'vscode-text-field') {
+    prettierConfig[optionName] = parseInt(input.value, 10)
+  } else {
+    prettierConfig[optionName] = input.value
+  }
+
+  console.log('🔄 업데이트된 Prettier 설정:', prettierConfig) // 🌟 변경된 설정 확인
+
+  // 📌 설정 변경 후 즉시 포맷 요청
   vscode.postMessage({
     type: 'formatCode',
     config: prettierConfig,
