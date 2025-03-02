@@ -14,8 +14,6 @@ window.addEventListener('message', (event) => {
 
   // 📌 Prettier 포맷 결과 업데이트
   if (event.data.type === 'formattedCode') {
-    console.log('✅ Prettier가 반환한 포맷팅 결과:', event.data.code)
-
     const codeBlock = document.getElementById('formattedCode')
     codeBlock.textContent = event.data.code
     hljs.highlightElement(codeBlock) // ✨ 하이라이팅 적용
@@ -81,11 +79,16 @@ function formatCode(event) {
     prettierConfig[optionName] = input.value
   }
 
-  console.log('🔄 업데이트된 Prettier 설정:', prettierConfig) // 🌟 변경된 설정 확인
-
   // 📌 설정 변경 후 즉시 포맷 요청
   vscode.postMessage({
     type: 'formatCode',
+    config: prettierConfig,
+  })
+}
+
+function applySettings() {
+  vscode.postMessage({
+    type: 'applySettings',
     config: prettierConfig,
   })
 }

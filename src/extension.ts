@@ -70,15 +70,16 @@ export function activate(context: vscode.ExtensionContext) {
           'toolkit.js',
         ),
       )
-      const highlightJsUri = panel.webview.asWebviewUri(
+      // COMMENT: 왜인지 불러오지를 못하므로 그냥 cdn에서 가져오는 방식으로 바꿔둠
+      /* const highlightJsUri = panel.webview.asWebviewUri(
         vscode.Uri.joinPath(
           context.extensionUri,
           'node_modules',
           'highlight.js',
           'lib',
-          'highlight.js',
+          'index.js',
         ),
-      )
+      ) */
 
       const indexPath = path.join(context.extensionPath, 'media', 'index.html')
       let htmlContent = fs.readFileSync(indexPath, 'utf8')
@@ -89,18 +90,16 @@ export function activate(context: vscode.ExtensionContext) {
         /{{toolkitUri}}/g,
         toolkitUri.toString(),
       )
-      htmlContent = htmlContent.replace(
+      /* htmlContent = htmlContent.replace(
         /{{highlightJsUri}}/g,
         highlightJsUri.toString(),
-      )
+      ) */
 
       panel.webview.html = htmlContent
 
       try {
         const prettierSupportInfo = await prettier.getSupportInfo()
         const prettierOptions = prettierSupportInfo.options
-
-        console.log('✅ Prettier 지원 설정 목록:', prettierOptions)
 
         panel.webview.postMessage({
           type: 'loadPrettierOptions',
@@ -113,14 +112,29 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       panel.webview.onDidReceiveMessage(async (message) => {
-        if (message.type === 'formatCode') {
+        if (message.type === 'applySettings') {
+          const prettierSupportInfo = await prettier.getSupportInfo()
+          const filtered = prettierSupportInfo.options.reduce(
+            (acc: any, option) => {
+              const name = option.name
+              if (!name) return acc
+              const value = message.config[option.name]
+              if (!value) return acc
+              if (option.default == value) return acc
+              acc[name] = value
+              return acc
+            },
+            {},
+          )
+          log.appendLine(
+            '✅ 사용자 지정 Prettier 설정: ' + JSON.stringify(filtered),
+          )
+        } else if (message.type === 'formatCode') {
           try {
             const example = `
 /** @format */
 // (requirePragma가 true이면 위 @format 주석이 있어야 함)
-// Prettier 옵션 테스트 예제
 
-// 1. 일반 JavaScript 코드: 화살표 함수, 삼항 연산자, 세미콜론 등
 const compute = (a, b) =>
   a > b
     ? a - b
@@ -128,7 +142,6 @@ const compute = (a, b) =>
     ? b - a
     : 0;
 
-// 2. 객체 리터럴: trailingComma, bracketSpacing, quoteProps, objectWrap, singleQuote 테스트
 const person = {
   name: "Alice",
   hobbies: ["reading", "coding", "traveling"],
@@ -138,31 +151,24 @@ const person = {
   },
 };
 
-// 3. JSX 코드: jsxSingleQuote, singleAttributePerLine 테스트
-import React from "react";
-const UserCard = () => (
+const UserCard = (person) => (
   <div id="user-card" className="card" data-active={true}>
     <h2>{person.firstName + " " + person.lastName}</h2>
     <p>{\`Age: \${person.age}\`}</p>
     <p> 1<b> 2 </b>3  </p>
   </div>
 );
-export default UserCard;
 
-// 6. Markdown 텍스트: proseWrap 테스트
 const markdownText = \`
 # Sample Markdown Title
-
-This is a long paragraph intended to test how proseWrap works in Prettier. The text should wrap according to the printWidth setting without breaking words awkwardly.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 \`;
 
-// 7. Range 테스트: 아래 코드는 특정 범위만 포맷되도록 할 때 효과 확인 가능
 function notFormatted() {
   const messyArray = [  1,2,  3,4,5 ];
   return messyArray;
 }
 
-// Dummy usage
 console.log(
   compute(10, 5),
   person,
