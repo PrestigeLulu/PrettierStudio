@@ -10,7 +10,13 @@ window.addEventListener('message', (event) => {
   // 📌 Prettier 설정 옵션 목록 로드
   if (message.type === 'loadPrettierOptions') {
     generateSettingsUI(message.options)
+    return
   }
+
+  // 생각해보니 한글팩 플러그인 쓰는거라 감지안됨;;
+  /* if (message.type === 'language') {
+    console.log(message.language)
+  } */
 
   // 📌 Prettier 포맷 결과 업데이트
   if (event.data.type === 'formattedCode') {
@@ -92,3 +98,8 @@ function applySettings() {
     config: prettierConfig,
   })
 }
+
+vscode.postMessage({
+  type: 'formatCode',
+  config: prettierConfig,
+})

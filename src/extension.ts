@@ -105,6 +105,10 @@ export function activate(context: vscode.ExtensionContext) {
           type: 'loadPrettierOptions',
           options: prettierOptions,
         })
+        panel.webview.postMessage({
+          type: 'language',
+          language: vscode.env.language,
+        })
       } catch (error) {
         vscode.window.showErrorMessage(
           '❌ Prettier 설정을 가져오는 중 오류 발생: ' + error,
@@ -149,6 +153,7 @@ const person = {
     city: "Wonderland",
     zip: "12345",
   },
+  spacing: { a:1 }
 };
 
 const UserCard = (person) => (
