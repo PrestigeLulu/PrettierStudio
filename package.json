@@ -9,7 +9,7 @@
     "Other"
   ],
   "repository": "https://github.com/PrestigeLulu/PrettierStudio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.75.0"
   },
