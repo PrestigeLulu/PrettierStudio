@@ -117,22 +117,48 @@ export function activate(context: vscode.ExtensionContext) {
 
       panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'applySettings') {
+          // Prettier 지원 옵션 정보 가져오기
           const prettierSupportInfo = await prettier.getSupportInfo()
+          // 기본 설정과 비교하여 사용자 지정된 값만 필터링
           const filtered = prettierSupportInfo.options.reduce(
             (acc: any, option) => {
               const name = option.name
               if (!name) return acc
-              const value = message.config[option.name]
-              if (!value) return acc
-              if (option.default == value) return acc
+              // value가 undefined가 아니고, 기본값과 다른 경우에만 저장
+              const value = message.config[name]
+              if (value === undefined || option.default === value) return acc
               acc[name] = value
               return acc
             },
             {},
           )
+
+          // 로그에 필터링된 결과 출력 (디버깅용)
           log.appendLine(
-            '✅ 사용자 지정 Prettier 설정: ' + JSON.stringify(filtered),
+            '✅ 사용자 지정 Prettier 설정: ' +
+              JSON.stringify(filtered, null, 2),
           )
+
+          // 워크스페이스에서 .prettierrc 파일 저장 (JSON 형식)
+          const workspaceFolders = vscode.workspace.workspaceFolders
+          if (!workspaceFolders || workspaceFolders.length === 0) {
+            vscode.window.showErrorMessage('워크스페이스가 열려 있지 않습니다.')
+            return
+          }
+          const workspacePath = workspaceFolders[0].uri.fsPath
+          const configPath = path.join(workspacePath, '.prettierrc')
+          try {
+            fs.writeFileSync(
+              configPath,
+              JSON.stringify(filtered, null, 2) + '\n',
+              'utf8',
+            )
+            vscode.window.showInformationMessage(
+              '.prettierrc 파일이 성공적으로 저장되었습니다.',
+            )
+          } catch (err) {
+            vscode.window.showErrorMessage('설정 저장 중 오류 발생: ' + err)
+          }
         } else if (message.type === 'formatCode') {
           try {
             const example = `
