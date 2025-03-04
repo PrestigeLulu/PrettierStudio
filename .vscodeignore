@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+!node_modules/prettier/**
+!node_modules/@types/vscode/**
+!node_modules/@vscode/webview-ui-toolkit/**
+
+# Source files
+src/**
+!out/src/**
+
+!dist
+
+# Development files
+.git/**
+.github/**
+.vscode/**
+.vscode-test/**
+.gitignore
+tsconfig.json
+webpack.config.js
+*.vsix
+
+# Documentation
+*.md
+CHANGELOG.md
+README.md
+
+# Test files
+test/**
+coverage/**
+
+# Misc
+.DS_Store
+**/.DS_Store
+.env
+.env.*
