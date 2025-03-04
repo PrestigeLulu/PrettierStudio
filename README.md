@@ -34,19 +34,14 @@ Prettier Studio는 VS Code에서 Prettier 설정을 쉽게 미리보고 수정�
 
 ## 📖 사용 방법
 
-1. VS Code 명령 팔레트 열기 (`Cmd+Shift+P` 또는 `Ctrl+Shift+P`)
-2. `Prettier Studio Open Setting` 명령 실행
+1. `.prettierrc` 파일 열기
+2. 우측 하단에 `Prettier Studio` 버튼 누르기
 3. 설정 창에서 원하는 Prettier 옵션 조정
 4. 실시간으로 포맷팅 결과 확인
 
 <div align="center">
 Prettier Studio 사용 예시
 </div>
-
-## 💻 시스템 요구사항
-
-- VS Code 버전 1.75.0 이상
-- Prettier 3.5.2 이상
 
 ## 🔧 지원하는 설정 옵션
 
