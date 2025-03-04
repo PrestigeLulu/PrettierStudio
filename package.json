@@ -1,6 +1,7 @@
 {
   "name": "prettier-studio",
   "displayName": "Prettier Studio",
+  "publisher": "PrestigeLulu",
   "description": "Easily preview and modify Prettier settings.",
   "categories": [
     "Formatters",
