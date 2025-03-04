@@ -7,37 +7,62 @@ let prettierConfig = {}
 window.addEventListener('message', (event) => {
   const message = event.data
 
-  // 📌 Prettier 설정 옵션 목록 로드
+  if (message.type === 'loadPrettierConfig') {
+    console.log('Loaded config:', message.config)
+    updateUIWithConfig(message.config)
+    return
+  }
+
+  // Prettier 설정 옵션 목록 로드
   if (message.type === 'loadPrettierOptions') {
     generateSettingsUI(message.options)
     return
   }
 
-  // 생각해보니 한글팩 플러그인 쓰는거라 감지안됨;;
-  /* if (message.type === 'language') {
-    console.log(message.language)
-  } */
-
-  // 📌 Prettier 포맷 결과 업데이트
-  if (event.data.type === 'formattedCode') {
+  // Prettier 포맷 결과 업데이트
+  if (message.type === 'formattedCode') {
     const codeBlock = document.getElementById('formattedCode')
-    codeBlock.textContent = event.data.code
-    hljs.highlightElement(codeBlock) // ✨ 하이라이팅 적용
+    codeBlock.textContent = message.code
+    hljs.highlightElement(codeBlock) // 하이라이팅 적용
   }
 })
+
+// 기존 설정값을 UI에 반영하는 함수
+function updateUIWithConfig(config) {
+  // 전역 prettierConfig 업데이트
+  prettierConfig = config
+  const settingsContainer = document.getElementById('settings')
+  // settingsContainer 내 모든 옵션 라벨을 순회
+  const labels = settingsContainer.getElementsByClassName(
+    'prettier-studio-label',
+  )
+  for (let label of labels) {
+    const input = label.querySelector(
+      'vscode-checkbox, vscode-text-field, vscode-dropdown',
+    )
+    if (!input) continue
+    const optionName = input.dataset.option
+    if (config.hasOwnProperty(optionName)) {
+      if (input.tagName.toLowerCase() === 'vscode-checkbox') {
+        input.checked = config[optionName]
+      } else if (input.tagName.toLowerCase() === 'vscode-text-field') {
+        input.value = config[optionName]
+      } else if (input.tagName.toLowerCase() === 'vscode-dropdown') {
+        input.value = config[optionName]
+      }
+    }
+  }
+}
 
 // 설정 UI 생성 함수
 function generateSettingsUI(options) {
   const settingsContainer = document.getElementById('settings')
-
-  // 📌 options를 type에 따라 정렬
+  // 옵션 정렬 (타입별 내림차순)
   options.sort((a, b) => b.type.localeCompare(a.type))
-
   options.forEach((option) => {
     const label = document.createElement('label')
     label.className = 'prettier-studio-label'
     label.textContent = option.name
-
     let input
     if (option.type === 'boolean') {
       input = document.createElement('vscode-checkbox')
@@ -60,12 +85,10 @@ function generateSettingsUI(options) {
     } else {
       return
     }
-
     input.dataset.option = option.name
     label.appendChild(input)
     settingsContainer.insertBefore(label, settingsContainer.firstChild)
-
-    // 📌 입력값 변경 시 포맷 요청
+    // 입력값 변경 시 포맷 요청 (실시간 업데이트)
     input.addEventListener('change', formatCode)
   })
 }
@@ -73,10 +96,8 @@ function generateSettingsUI(options) {
 function formatCode(event) {
   const input = event.target
   const optionName = input.dataset.option
-
-  if (!optionName) return // 🌟 예외 처리
+  if (!optionName) return
   const type = input.tagName.toLowerCase()
-
   if (type === 'vscode-checkbox') {
     prettierConfig[optionName] = input.checked
   } else if (type === 'vscode-text-field') {
@@ -84,8 +105,7 @@ function formatCode(event) {
   } else {
     prettierConfig[optionName] = input.value
   }
-
-  // 📌 설정 변경 후 즉시 포맷 요청
+  // 변경된 설정값을 즉시 포맷 요청
   vscode.postMessage({
     type: 'formatCode',
     config: prettierConfig,

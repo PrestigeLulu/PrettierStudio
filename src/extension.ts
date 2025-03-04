@@ -55,6 +55,13 @@ export function activate(context: vscode.ExtensionContext) {
           ],
         },
       )
+      const iconPath = vscode.Uri.joinPath(
+        context.extensionUri,
+        'media',
+        'image.png',
+      )
+      panel.iconPath = iconPath
+
       const styleUri = panel.webview.asWebviewUri(
         vscode.Uri.joinPath(context.extensionUri, 'media', 'style.css'),
       )
@@ -99,7 +106,9 @@ export function activate(context: vscode.ExtensionContext) {
 
       try {
         const prettierSupportInfo = await prettier.getSupportInfo()
-        const prettierOptions = prettierSupportInfo.options
+        const prettierOptions = prettierSupportInfo.options.filter(
+          (option) => option.name !== 'parser',
+        )
 
         panel.webview.postMessage({
           type: 'loadPrettierOptions',
@@ -114,6 +123,25 @@ export function activate(context: vscode.ExtensionContext) {
           '❌ Prettier 설정을 가져오는 중 오류 발생: ' + error,
         )
       }
+
+      let prettierrcConfig = {}
+      const workspaceFolders = vscode.workspace.workspaceFolders
+      if (workspaceFolders && workspaceFolders.length > 0) {
+        const workspacePath = workspaceFolders[0].uri.fsPath
+        const configPath = path.join(workspacePath, '.prettierrc')
+        if (fs.existsSync(configPath)) {
+          try {
+            prettierrcConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+          } catch (err) {
+            vscode.window.showErrorMessage('기존 .prettierrc 읽기 실패: ' + err)
+          }
+        }
+      }
+      // Webview에 기존 설정값 전달
+      panel.webview.postMessage({
+        type: 'loadPrettierConfig',
+        config: prettierrcConfig,
+      })
 
       panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'applySettings') {

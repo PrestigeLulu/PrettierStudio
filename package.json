@@ -2,7 +2,7 @@
   "name": "prettier-studio",
   "displayName": "Prettier Studio",
   "description": "Easily preview and modify Prettier settings.",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.75.0"
   },
