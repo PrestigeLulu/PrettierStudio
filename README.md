@@ -41,6 +41,7 @@ Prettier Studio는 VS Code에서 Prettier 설정을 쉽게 미리보고 수정�
 
 <div align="center">
 Prettier Studio 사용 예시
+  <video src = "https://github.com/user-attachments/assets/5f4b921b-684a-46aa-80c0-7d55b3485db1"/>
 </div>
 
 ## 🔧 지원하는 설정 옵션
