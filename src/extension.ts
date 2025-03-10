@@ -2,13 +2,16 @@ import * as vscode from 'vscode'
 import * as prettier from 'prettier'
 import * as fs from 'fs'
 import * as path from 'path'
+import { createStatusBarItem, updateStatusBar } from './utils/statusBar'
+import { openSettingsPanel } from './webview/panel'
 
-let statusBarItem = createStatusBarItem()
 export function activate(context: vscode.ExtensionContext) {
   const log = vscode.window.createOutputChannel('Prettier Studio')
   log.appendLine('🎉 Prettier Studio Activated!')
 
+  const statusBarItem = createStatusBarItem()
   updateStatusBar(vscode.window.activeTextEditor)
+
   vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
   vscode.workspace.onDidOpenTextDocument(() =>
     updateStatusBar(vscode.window.activeTextEditor),
@@ -22,153 +25,8 @@ export function activate(context: vscode.ExtensionContext) {
   )
 }
 
-function createStatusBarItem() {
-  const statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-    100,
-  )
-  statusBarItem.command = 'prettier-studio.openSettings'
-  statusBarItem.text = '⚙️ Prettier Studio'
-  statusBarItem.tooltip = 'Prettier 설정 편집'
-  statusBarItem.hide()
-  return statusBarItem
-}
-
-function updateStatusBar(editor: vscode.TextEditor | undefined) {
-  if (editor && isPrettierConfigFile(editor.document.fileName)) {
-    statusBarItem.show()
-  } else {
-    statusBarItem.hide()
-  }
-}
-
 function isPrettierConfigFile(fileName: string): boolean {
   return /\.prettierrc(\.json)?|prettier\.config\.js$/i.test(fileName)
-}
-
-async function openSettingsPanel(
-  context: vscode.ExtensionContext,
-  log: vscode.OutputChannel,
-) {
-  const panel = vscode.window.createWebviewPanel(
-    'prettierStudio',
-    'Prettier Studio',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.joinPath(context.extensionUri, 'node_modules'),
-        vscode.Uri.joinPath(context.extensionUri, 'media'),
-      ],
-    },
-  )
-  panel.iconPath = vscode.Uri.joinPath(
-    context.extensionUri,
-    'media',
-    'image.png',
-  )
-
-  panel.webview.html = getWebviewContent(context, panel)
-
-  try {
-    const prettierOptions = (await prettier.getSupportInfo()).options.filter(
-      (opt) => opt.name !== 'parser',
-    )
-    panel.webview.postMessage({
-      type: 'loadPrettierOptions',
-      options: prettierOptions,
-    })
-    panel.webview.postMessage({
-      type: 'language',
-      language: vscode.env.language,
-    })
-    panel.webview.postMessage({
-      type: 'loadPrettierConfig',
-      config: readPrettierConfig(),
-    })
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      '❌ Prettier 설정을 가져오는 중 오류 발생: ' + error,
-    )
-  }
-
-  panel.webview.onDidReceiveMessage(async (message) => {
-    if (message.type === 'applySettings') {
-      const prettierSupportInfo = await prettier.getSupportInfo()
-      const filtered = prettierSupportInfo.options.reduce(
-        (acc: any, option) => {
-          const name = option.name
-          if (!name) return acc
-          const value = message.config[name]
-          if (value === undefined || option.default === value) return acc
-          acc[name] = value
-          return acc
-        },
-        {},
-      )
-      savePrettierConfig(filtered, log)
-    } else if (message.type === 'formatCode') {
-      formatCode(panel, message.config)
-    }
-  })
-}
-
-function getWebviewContent(
-  context: vscode.ExtensionContext,
-  panel: vscode.WebviewPanel,
-) {
-  const resourceUri = (filename: string) =>
-    panel.webview
-      .asWebviewUri(
-        vscode.Uri.joinPath(context.extensionUri, 'media', filename),
-      )
-      .toString()
-  return fs
-    .readFileSync(
-      path.join(context.extensionPath, 'media', 'index.html'),
-      'utf8',
-    )
-    .replace(/{{styleUri}}/g, resourceUri('style.css'))
-    .replace(/{{scriptUri}}/g, resourceUri('script.js'))
-    .replace(
-      /{{toolkitUri}}/g,
-      panel.webview
-        .asWebviewUri(
-          vscode.Uri.joinPath(
-            context.extensionUri,
-            'node_modules',
-            '@vscode/webview-ui-toolkit',
-            'dist',
-            'toolkit.js',
-          ),
-        )
-        .toString(),
-    )
-}
-
-function readPrettierConfig() {
-  const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-  if (!workspacePath) return {}
-  const configPath = path.join(workspacePath, '.prettierrc')
-  return fs.existsSync(configPath)
-    ? JSON.parse(fs.readFileSync(configPath, 'utf8'))
-    : {}
-}
-
-function savePrettierConfig(config: any, log: vscode.OutputChannel) {
-  const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-  if (!workspacePath)
-    return vscode.window.showErrorMessage('워크스페이스가 열려 있지 않습니다.')
-
-  const configPath = path.join(workspacePath, '.prettierrc')
-  try {
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf8')
-    vscode.window.showInformationMessage(
-      '.prettierrc 파일이 성공적으로 저장되었습니다.',
-    )
-  } catch (err) {
-    vscode.window.showErrorMessage('설정 저장 중 오류 발생: ' + err)
-  }
 }
 
 async function formatCode(panel: vscode.WebviewPanel, config: any) {
