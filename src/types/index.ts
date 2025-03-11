@@ -7,13 +7,11 @@ export interface PrettierConfig {
 export interface WebviewMessage {
   type:
     | 'loadPrettierOptions'
-    | 'language'
     | 'loadPrettierConfig'
     | 'applySettings'
     | 'formatCode'
     | 'formattedCode'
   options?: any[]
   config?: PrettierConfig
-  language?: string
   code?: string
 }

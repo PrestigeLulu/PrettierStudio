@@ -6,19 +6,46 @@ import { PrettierConfig } from '../types'
 import { EXAMPLE_CODE } from '../constants'
 
 export async function getPrettierOptions() {
-  const prettierOptions = (await prettier.getSupportInfo()).options.filter(
-    (opt) => opt.name !== 'parser',
-  )
-  return prettierOptions
+  try {
+    const supportInfo = await prettier.getSupportInfo()
+    if (!supportInfo || !supportInfo.options) {
+      throw new Error(
+        `Prettier support info is undefined: ${JSON.stringify(supportInfo)}`,
+      )
+    }
+    const prettierOptions = supportInfo.options.filter(
+      (opt) => opt.name && opt.name !== 'parser',
+    )
+    if (!prettierOptions) {
+      throw new Error(
+        `Prettier options is undefined: ${JSON.stringify(prettierOptions)}`,
+      )
+    }
+    return prettierOptions
+  } catch (error: any) {
+    console.error('Prettier options error:', error)
+    throw error
+  }
 }
 
 export function readPrettierConfig(): PrettierConfig {
   const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-  if (!workspacePath) return {}
+  if (!workspacePath) {
+    throw new Error('Workspace path is undefined: ' + workspacePath)
+  }
   const configPath = path.join(workspacePath, '.prettierrc')
-  return fs.existsSync(configPath)
-    ? JSON.parse(fs.readFileSync(configPath, 'utf8'))
-    : {}
+  if (!configPath) {
+    throw new Error('Config path is undefined: ' + configPath)
+  }
+  if (!fs.existsSync(configPath)) {
+    throw new Error('Config file does not exist: ' + configPath)
+  }
+  const configFile = fs.readFileSync(configPath, 'utf8')
+  try {
+    return JSON.parse(configFile)
+  } catch (error: any) {
+    throw new Error('Config file is not valid JSON: ' + error.message)
+  }
 }
 
 export function savePrettierConfig(

@@ -35,23 +35,24 @@ export async function openSettingsPanel(
 
   try {
     const prettierOptions = await getPrettierOptions()
+    log.appendLine(JSON.stringify(prettierOptions))
     panel.webview.postMessage({
       type: 'loadPrettierOptions',
       options: prettierOptions,
     } as WebviewMessage)
 
-    panel.webview.postMessage({
+    /* panel.webview.postMessage({
       type: 'language',
       language: vscode.env.language,
-    } as WebviewMessage)
+    } as WebviewMessage) */
 
     panel.webview.postMessage({
       type: 'loadPrettierConfig',
       config: readPrettierConfig(),
     } as WebviewMessage)
-  } catch (error) {
+  } catch (error: any) {
     vscode.window.showErrorMessage(
-      '❌ Prettier 설정을 가져오는 중 오류 발생: ' + error,
+      `❌ Prettier 설정을 가져오는 중 오류 발생: ${error?.message || 'Unknown error'}`,
     )
   }
 
