@@ -10,7 +10,7 @@
   ],
   "icon": "./media/image.png",
   "repository": "https://github.com/PrestigeLulu/PrettierStudio",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "engines": {
     "vscode": "^1.75.0"
   },

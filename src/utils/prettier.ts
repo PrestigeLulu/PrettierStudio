@@ -1,12 +1,16 @@
 import * as vscode from 'vscode'
-import * as prettier from 'prettier'
 import * as fs from 'fs'
 import * as path from 'path'
 import { PrettierConfig } from '../types'
 import { EXAMPLE_CODE } from '../constants'
 
+async function getPrettier() {
+  return await import('prettier')
+}
+
 export async function getPrettierOptions() {
   try {
+    const prettier = await getPrettier()
     const supportInfo = await prettier.getSupportInfo()
     if (!supportInfo || !supportInfo.options) {
       throw new Error(
@@ -69,6 +73,7 @@ export function savePrettierConfig(
 
 export async function formatCode(config: PrettierConfig): Promise<string> {
   try {
+    const prettier = await getPrettier()
     const formatted = await prettier.format(EXAMPLE_CODE, {
       parser: 'babel',
       ...config,
