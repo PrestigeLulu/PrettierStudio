@@ -24,7 +24,10 @@ Prettier Studio는 VS Code에서 Prettier 설정을 쉽게 미리보고 수정�
 - 👀 코드 포맷팅 결과를 즉시 확인
 - 🎯 직관적인 인터페이스를 통한 설정 변경
 - 🛠 다양한 포맷팅 옵션 지원
-- 💡 설정 변경 시 자동 저장
+- 📦 워크스페이스에 설치된 Prettier 버전 사용
+- 💡 Apply 버튼으로 안전하게 설정 저장
+- 🧭 설정 패널과 미리보기 패널 너비 조정
+- 🗒 옵션별 한국어 툴팁 제공
 
 ## 📥 설치 방법
 
@@ -38,6 +41,9 @@ Prettier Studio는 VS Code에서 Prettier 설정을 쉽게 미리보고 수정�
 2. 우측 하단에 `Prettier Studio` 버튼 누르기
 3. 설정 창에서 원하는 Prettier 옵션 조정
 4. 실시간으로 포맷팅 결과 확인
+5. `Apply` 버튼으로 설정 저장
+
+> Prettier Studio는 현재 워크스페이스의 `node_modules/prettier`를 사용합니다. 프로젝트에 Prettier가 설치되어 있지 않다면 먼저 `npm install -D prettier` 또는 `yarn add -D prettier`로 설치해주세요.
 
 <div align="center">
 Prettier Studio 사용 예시
@@ -53,6 +59,25 @@ Prettier Studio 사용 예시
 - `singleQuote`: 작은따옴표 사용 여부
 - `bracketSpacing`: 객체 리터럴의 중괄호 간격
 - 그 외 다양한 Prettier 옵션 지원
+
+## ⚙️ 설정 파일 지원
+
+- `.prettierrc`
+- `.prettierrc.json`
+- `.prettierrc.yaml`, `.prettierrc.yml`
+- `.prettierrc.js`, `.prettierrc.cjs`, `.prettierrc.mjs`
+- `prettier.config.js`, `prettier.config.cjs`, `prettier.config.mjs`, `prettier.config.ts`
+
+저장은 안전한 JSON 계열 설정 파일인 `.prettierrc`, `.prettierrc.json`에서 지원합니다. JS/YAML 설정 파일은 읽기 전용으로 불러옵니다.
+
+## 🆕 2.0.0
+
+- 확장에 내장된 Prettier 대신 워크스페이스 Prettier 사용
+- VS Code 웹뷰 상태 유지 개선
+- 설정 파일 탐색과 저장 UX 개선
+- 패널 너비 조정 기능 추가
+- 미리보기 코드와 옵션 툴팁 개선
+- 패키징 의존성 정리
 
 ## 📄 라이선스
 

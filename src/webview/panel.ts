@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
-import * as prettier from 'prettier'
-import { WebviewMessage } from '../types'
+import { PrettierConfigState, WebviewMessage } from '../types'
 import { getWebviewContent } from './content'
 import {
+  getConfigWithNonDefaultOptions,
   getPrettierOptions,
   readPrettierConfig,
   savePrettierConfig,
@@ -13,12 +13,17 @@ export async function openSettingsPanel(
   context: vscode.ExtensionContext,
   log: vscode.OutputChannel,
 ) {
+  let prettierOptions: Awaited<ReturnType<typeof getPrettierOptions>> | null =
+    null
+  let prettierConfigState: PrettierConfigState | null = null
+
   const panel = vscode.window.createWebviewPanel(
     'prettierStudio',
     'Prettier Studio',
     vscode.ViewColumn.One,
     {
       enableScripts: true,
+      retainContextWhenHidden: true,
       localResourceRoots: [
         vscode.Uri.joinPath(context.extensionUri, 'node_modules'),
         vscode.Uri.joinPath(context.extensionUri, 'media'),
@@ -33,44 +38,49 @@ export async function openSettingsPanel(
 
   panel.webview.html = getWebviewContent(context, panel)
 
-  try {
-    const prettierOptions = await getPrettierOptions()
-    log.appendLine(JSON.stringify(prettierOptions))
-    panel.webview.postMessage({
-      type: 'loadPrettierOptions',
-      options: prettierOptions,
-    } as WebviewMessage)
+  const postWebviewState = () => {
+    if (prettierOptions) {
+      panel.webview.postMessage({
+        type: 'loadPrettierOptions',
+        options: prettierOptions,
+      } as WebviewMessage)
+    }
 
-    /* panel.webview.postMessage({
-      type: 'language',
-      language: vscode.env.language,
-    } as WebviewMessage) */
-
-    panel.webview.postMessage({
-      type: 'loadPrettierConfig',
-      config: readPrettierConfig(),
-    } as WebviewMessage)
-  } catch (error: any) {
-    vscode.window.showErrorMessage(
-      `❌ Prettier 설정을 가져오는 중 오류 발생: ${error?.message || 'Unknown error'}`,
-    )
+    if (prettierConfigState) {
+      panel.webview.postMessage({
+        type: 'loadPrettierConfig',
+        config: prettierConfigState.config,
+        configPath: prettierConfigState.configPath,
+        isWritable: prettierConfigState.isWritable,
+      } as WebviewMessage)
+    }
   }
 
   panel.webview.onDidReceiveMessage(async (message: WebviewMessage) => {
-    if (message.type === 'applySettings' && message.config) {
-      const prettierSupportInfo = await prettier.getSupportInfo()
-      const filtered = prettierSupportInfo.options.reduce(
-        (acc: any, option) => {
-          const name = option.name
-          if (!name) return acc
-          const value = message.config?.[name]
-          if (value === undefined || option.default === value) return acc
-          acc[name] = value
-          return acc
-        },
-        {},
-      )
-      savePrettierConfig(filtered, log)
+    if (message.type === 'ready') {
+      postWebviewState()
+    } else if (message.type === 'applySettings' && message.config) {
+      if (!prettierConfigState) return
+
+      try {
+        const filtered = await getConfigWithNonDefaultOptions(message.config)
+        savePrettierConfig(filtered, log, prettierConfigState.configPath)
+        prettierConfigState = {
+          ...prettierConfigState,
+          config: filtered,
+        }
+        panel.webview.postMessage({
+          type: 'saveResult',
+          level: 'success',
+          message: `${prettierConfigState.configPath} 저장 완료`,
+        } as WebviewMessage)
+      } catch (error: any) {
+        panel.webview.postMessage({
+          type: 'saveResult',
+          level: 'error',
+          message: error?.message || '설정 저장 중 오류가 발생했습니다.',
+        } as WebviewMessage)
+      }
     } else if (message.type === 'formatCode' && message.config) {
       try {
         const formatted = await formatCode(message.config)
@@ -83,4 +93,35 @@ export async function openSettingsPanel(
       }
     }
   })
+
+  try {
+    prettierOptions = await getPrettierOptions()
+    prettierConfigState = await readPrettierConfig()
+    log.appendLine(JSON.stringify(prettierOptions))
+    postWebviewState()
+
+    if (!prettierConfigState.isWritable) {
+      panel.webview.postMessage({
+        type: 'showStatus',
+        level: 'warning',
+        message:
+          '현재 설정 파일은 읽기 전용으로 불러왔습니다. 저장은 .prettierrc 또는 .prettierrc.json에서만 지원합니다.',
+      } as WebviewMessage)
+    }
+
+    /* panel.webview.postMessage({
+      type: 'language',
+      language: vscode.env.language,
+    } as WebviewMessage) */
+  } catch (error: any) {
+    const message = `Prettier 설정을 가져오는 중 오류 발생: ${
+      error?.message || 'Unknown error'
+    }`
+    vscode.window.showErrorMessage(`❌ ${message}`)
+    panel.webview.postMessage({
+      type: 'showStatus',
+      level: 'error',
+      message,
+    } as WebviewMessage)
+  }
 }

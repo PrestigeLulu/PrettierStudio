@@ -1,14 +1,12 @@
 # Dependencies
-node_modules
-!node_modules/prettier/**
-!node_modules/@types/vscode/**
+node_modules/**
+!node_modules/
+!node_modules/@vscode/
 !node_modules/@vscode/webview-ui-toolkit/**
 
 # Source files
 src/**
-!out/src/**
-
-!dist
+dist/**/*.map
 
 # Development files
 .git/**

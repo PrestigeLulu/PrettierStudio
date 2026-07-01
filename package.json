@@ -10,13 +10,18 @@
   ],
   "icon": "./media/image.png",
   "repository": "https://github.com/PrestigeLulu/PrettierStudio",
-  "version": "1.0.15",
+  "version": "2.0.0",
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.120.0"
   },
   "main": "./dist/extension.js",
   "author": "루루 <alsrb4171@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "compile": "tsc -p .",
+    "build": "yarn compile",
+    "vscode:prepublish": "yarn compile"
+  },
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -29,13 +34,12 @@
     ]
   },
   "devDependencies": {
-    "@types/node": "^22.13.8",
-    "typescript": "^5.8.2"
+    "@types/node": "^26.0.0",
+    "@types/vscode": "1.120.0",
+    "prettier": "^3.8.4",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "prettier": "^3.5.2",
-    "@types/vscode": "^1.97.0",
-    "@vscode/webview-ui-toolkit": "^1.4.0",
-    "highlight.js": "^11.11.1"
+    "@vscode/webview-ui-toolkit": "^1.4.0"
   }
 }

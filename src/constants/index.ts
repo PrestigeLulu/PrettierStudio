@@ -1,51 +1,38 @@
 export const PRETTIER_CONFIG_PATTERN =
-  /\.prettierrc(\.json)?|prettier\.config\.js$/i
+  /(?:^|[\\/])(?:\.prettierrc(?:\.(?:json|ya?ml|js|cjs|mjs))?|prettier\.config\.(?:js|cjs|mjs|ts))$/i
 
 export const EXAMPLE_CODE = `
 /** @format */
-// (requirePragma가 true이면 위 @format 주석이 있어야 함)
 
-const compute = (a, b) =>
-  a > b
-    ? a - b
-    : a < b
-    ? b - a
-    : 0;
-
-const person = {
-  name: "Alice",
-  hobbies: ["reading", "coding", "traveling"],
-  address: {
-    city: "Wonderland",
-    zip: "12345",
-  },
-  spacing: { a:1 }
+const editorSettings = {
+  projectName: "Prettier Studio",
+  maintainers: ["Lulu", "Open Source Contributors"],
+  rules: { semi: false, singleQuote: true, printWidth: 80 },
 };
 
-const UserCard = (person) => (
-  <div id="user-card" className="card" data-active={true}>
-    <h2>{person.firstName + " " + person.lastName}</h2>
-    <p>{\`Age: \${person.age}\`}</p>
-    <p> 1<b> 2 </b>3  </p>
-  </div>
-);
+const formatUser = (user) => ({
+  id: user.id,
+  displayName: user.name ?? "Anonymous",
+  roles: user.roles.map((role) => role.toUpperCase()),
+});
 
-const markdownText = \`
-# Sample Markdown Title
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-\`;
+const users = [
+  { id: 1, name: "Ada Lovelace", roles: ["admin", "reviewer"] },
+  { id: 2, name: "Grace Hopper", roles: ["developer"] },
+];
 
-function notFormatted() {
-  const messyArray = [  1,2,  3,4,5 ];
-  return messyArray;
+const summary = users
+  .map(formatUser)
+  .filter((user) => user.roles.includes("ADMIN") || user.roles.includes("DEVELOPER"));
+
+function SettingsPreview() {
+  return (
+    <section className="preview" data-project={editorSettings.projectName}>
+      <h1>{editorSettings.projectName}</h1>
+      <p>{summary.length + " collaborators are ready for this workspace."}</p>
+    </section>
+  );
 }
 
-console.log(
-  compute(10, 5),
-  person,
-  htmlSnippet,
-  vueComponent,
-  markdownText,
-  notFormatted()
-);
+console.log({ editorSettings, summary, SettingsPreview });
 `

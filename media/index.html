@@ -6,7 +6,6 @@
     <title>Prettier Studio</title>
     <script type="module" src="{{toolkitUri}}"></script>
     <script src="{{scriptUri}}"></script>
-    <script src="{{highlightJsUri}}"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css"
@@ -17,8 +16,19 @@
   <body>
     <div class="container">
       <div id="settings" class="settings overview">
-        <vscode-button onclick="applySettings()">Apply</vscode-button>
+        <div id="configStatus" class="config-status" data-level="info"></div>
+        <vscode-button id="applyButton" onclick="applySettings()">
+          Apply
+        </vscode-button>
       </div>
+
+      <div
+        id="resizeHandle"
+        class="resize-handle"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize panels"
+      ></div>
 
       <div class="code-preview overview">
         <pre id="formattedCode">function(){}</pre>

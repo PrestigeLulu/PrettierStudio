@@ -1,7 +1,7 @@
 .container {
   display: flex;
-  gap: 40px;
   height: 100vh;
+  --settings-width: 38%;
 }
 
 .settings,
@@ -9,22 +9,98 @@
   padding: 10px;
   border-radius: 5px;
   overflow-y: auto; /* 세로 스크롤 자동 */
+  box-sizing: border-box;
 }
 
 .settings {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 2;
+  flex: 0 0 var(--settings-width);
+  min-width: 240px;
+  max-width: 70%;
+}
+
+.config-status {
+  min-height: 18px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--vscode-textLink-foreground);
+  background: var(--vscode-editorWidget-background);
+  color: var(--vscode-editorWidget-foreground);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.config-status[data-level='success'] {
+  border-left-color: var(--vscode-testing-iconPassed);
+}
+
+.config-status[data-level='warning'] {
+  border-left-color: var(--vscode-editorWarning-foreground);
+}
+
+.config-status[data-level='error'] {
+  border-left-color: var(--vscode-editorError-foreground);
 }
 
 .prettier-studio-label {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-radius: 3px;
+  padding: 2px 4px;
+}
+
+.prettier-studio-label:hover,
+.prettier-studio-label:focus-within {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.option-tooltip {
+  position: fixed;
+  z-index: 10;
+  display: none;
+  max-width: 320px;
+  padding: 7px 9px;
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 3px;
+  background: var(--vscode-editorWidget-background);
+  color: var(--vscode-editorWidget-foreground);
+  box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.option-tooltip.visible {
+  display: block;
+}
+
+.resize-handle {
+  flex: 0 0 8px;
+  cursor: col-resize;
+  position: relative;
+}
+
+.resize-handle::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 3px;
+  width: 2px;
+  background: var(--vscode-panel-border);
+}
+
+.resize-handle:hover::before,
+.container.resizing .resize-handle::before {
+  background: var(--vscode-focusBorder);
 }
 
 .code-preview {
-  flex: 3;
+  flex: 1 1 0;
+  min-width: 260px;
 }
 
 pre {
