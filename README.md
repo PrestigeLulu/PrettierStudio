@@ -2,8 +2,8 @@
 
 <div align="center">
 
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/PrestigeLulu.prettier-studio?style=flat-square&label=VS%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
-[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/PrestigeLulu.prettier-studio?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
+[![VS Marketplace](https://img.shields.io/badge/VS%20Marketplace-Prettier%20Studio-007ACC?style=flat-square&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
 <img src="./media/image.png" alt="Prettier Studio Logo" width="200"/>
