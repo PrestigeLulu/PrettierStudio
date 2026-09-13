@@ -10,7 +10,7 @@
   ],
   "icon": "./media/image.png",
   "repository": "https://github.com/PrestigeLulu/PrettierStudio",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "engines": {
     "vscode": "^1.120.0"
   },
@@ -19,6 +19,7 @@
   "license": "MIT",
   "scripts": {
     "compile": "tsc -p .",
+    "test": "npm run compile && node --test test/*.test.cjs",
     "build": "yarn compile",
     "vscode:prepublish": "yarn compile"
   },

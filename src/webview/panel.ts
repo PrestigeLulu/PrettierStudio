@@ -2,17 +2,27 @@ import * as vscode from 'vscode'
 import { PrettierConfigState, WebviewMessage } from '../types'
 import { getWebviewContent } from './content'
 import {
-  getConfigWithNonDefaultOptions,
+  getPrettierTarget,
   getPrettierOptions,
   readPrettierConfig,
   savePrettierConfig,
   formatCode,
+  validateNumericOptions,
 } from '../utils/prettier'
 
 export async function openSettingsPanel(
   context: vscode.ExtensionContext,
   log: vscode.OutputChannel,
 ) {
+  let target
+  try {
+    target = await getPrettierTarget()
+  } catch (error: any) {
+    vscode.window.showErrorMessage(error.message)
+    return
+  }
+  if (!target) return
+  const panelTarget = target
   let prettierOptions: Awaited<ReturnType<typeof getPrettierOptions>> | null =
     null
   let prettierConfigState: PrettierConfigState | null = null
@@ -63,12 +73,12 @@ export async function openSettingsPanel(
       if (!prettierConfigState) return
 
       try {
-        const filtered = await getConfigWithNonDefaultOptions(message.config)
-        savePrettierConfig(filtered, log, prettierConfigState.configPath)
-        prettierConfigState = {
-          ...prettierConfigState,
-          config: filtered,
-        }
+        validateNumericOptions(message.config, prettierOptions ?? [])
+        prettierConfigState = savePrettierConfig(
+          message.config,
+          log,
+          prettierConfigState,
+        )
         panel.webview.postMessage({
           type: 'saveResult',
           level: 'success',
@@ -83,20 +93,32 @@ export async function openSettingsPanel(
       }
     } else if (message.type === 'formatCode' && message.config) {
       try {
-        const formatted = await formatCode(message.config)
+        if (!prettierOptions) return
+        validateNumericOptions(message.config, prettierOptions)
+        const formatted = await formatCode(
+          message.config,
+          panelTarget,
+          message.language,
+        )
         panel.webview.postMessage({
           type: 'formattedCode',
           code: formatted,
+          language: message.language,
+          requestId: message.requestId,
         } as WebviewMessage)
-      } catch (error) {
-        // Error is already handled in formatCode
+      } catch (error: any) {
+        panel.webview.postMessage({
+          type: 'formatError',
+          message: error.message,
+          requestId: message.requestId,
+        })
       }
     }
   })
 
   try {
-    prettierOptions = await getPrettierOptions()
-    prettierConfigState = await readPrettierConfig()
+    prettierOptions = await getPrettierOptions(panelTarget)
+    prettierConfigState = await readPrettierConfig(panelTarget)
     log.appendLine(JSON.stringify(prettierOptions))
     postWebviewState()
 

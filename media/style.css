@@ -47,9 +47,41 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   border-radius: 3px;
   padding: 2px 4px;
+}
+
+.input-error {
+  flex-basis: 100%;
+  color: var(--vscode-errorForeground);
+  font-size: 12px;
+}
+.input-error:empty {
+  display: none;
+}
+input[type='number'],
+select {
+  color: var(--vscode-input-foreground);
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 5px;
+}
+input[type='number'] {
+  width: 90px;
+}
+[aria-invalid='true'] {
+  outline: 1px solid var(--vscode-inputValidation-errorBorder);
+}
+input:focus,
+select:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+#previewStatus {
+  min-height: 24px;
+  padding-top: 8px;
+  color: var(--vscode-descriptionForeground);
 }
 
 .prettier-studio-label:hover,
@@ -108,7 +140,12 @@ pre {
   white-space: pre-wrap;
 }
 
-.hljs {
+#formattedCode {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: var(--vscode-editor-font-size, 14px);
+  font-weight: 400;
+  font-variant-ligatures: none;
+  line-height: 1.5;
   background: none;
 }
 

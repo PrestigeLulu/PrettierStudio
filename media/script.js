@@ -2,10 +2,19 @@ const vscode = acquireVsCodeApi()
 let prettierConfig = {}
 let optionTooltip
 let configIsWritable = true
+let configReady = false
+let requestId = 0
+const editedInputs = new Set()
 
 window.addEventListener('DOMContentLoaded', () => {
   initOptionTooltip()
   initResizablePanels()
+  document
+    .getElementById('applyButton')
+    .addEventListener('click', applySettings)
+  document
+    .getElementById('previewLanguage')
+    .addEventListener('change', requestFormat)
   vscode.postMessage({ type: 'ready' })
 })
 
@@ -13,6 +22,7 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('message', ({ data }) => {
   switch (data.type) {
     case 'loadPrettierConfig':
+      configReady = true
       console.log('Loaded config:', data.config)
       updateUIWithConfig(data.config)
       updateConfigState(data.configPath, data.isWritable)
@@ -25,7 +35,13 @@ window.addEventListener('message', ({ data }) => {
       generateSettingsUI(data.options)
       break
     case 'formattedCode':
-      updateFormattedCode(data.code)
+      if (data.requestId !== requestId) break
+      document.getElementById('previewStatus').textContent = ''
+      updateFormattedCode(data.code, data.language)
+      break
+    case 'formatError':
+      if (data.requestId !== requestId) break
+      document.getElementById('previewStatus').textContent = data.message
       break
     case 'saveResult':
       showStatus(data.message, data.level)
@@ -45,7 +61,7 @@ function generateSettingsUI(options) {
     .forEach(
       ({ name, type, default: defaultValue, range, choices, description }) => {
         const label = createLabel(name)
-        const input = createInput(type, defaultValue, range, choices)
+        const input = createInput(type, defaultValue, range, choices, name)
 
         if (!input) return
         const hint = getOptionHint(name, description)
@@ -58,19 +74,27 @@ function generateSettingsUI(options) {
         }
         input.dataset.option = name
         label.appendChild(input)
+        const error = document.createElement('span')
+        error.className = 'input-error'
+        error.id = `error-${name}`
+        error.setAttribute('aria-live', 'polite')
+        input.setAttribute('aria-label', name)
+        input.setAttribute('aria-describedby', error.id)
+        label.appendChild(error)
         settingsContainer.prepend(label)
 
-        input.addEventListener('change', formatCode)
+        input.addEventListener(type === 'int' ? 'input' : 'change', formatCode)
       },
     )
 }
 
 // 📌 기존 설정값을 UI에 반영
 function updateUIWithConfig(config) {
+  editedInputs.clear()
   prettierConfig = config
   document.querySelectorAll('.prettier-studio-label').forEach((label) => {
     const input = label.querySelector(
-      'vscode-checkbox, vscode-text-field, vscode-dropdown',
+      'vscode-checkbox, input[type="number"], vscode-dropdown',
     )
     if (input && config.hasOwnProperty(input.dataset.option)) {
       setInputValue(input, config[input.dataset.option])
@@ -82,7 +106,7 @@ function updateConfigState(configPath, isWritable) {
   configIsWritable = isWritable !== false
 
   const applyButton = document.getElementById('applyButton')
-  if (applyButton) applyButton.disabled = !configIsWritable
+  if (applyButton) validateInputs()
 
   const fileName = configPath ? getFileName(configPath) : '.prettierrc'
   showStatus(
@@ -97,17 +121,58 @@ function updateConfigState(configPath, isWritable) {
 function formatCode({ target }) {
   const optionName = target.dataset.option
   if (!optionName) return
-
-  prettierConfig[optionName] = getInputValue(target)
+  editedInputs.add(target)
+  if (!validateInputs()) {
+    requestId++
+    document.getElementById('previewStatus').textContent =
+      '입력 오류를 수정하면 미리보기가 갱신됩니다.'
+    return
+  }
+  editedInputs.forEach((input) => {
+    prettierConfig[input.dataset.option] = getInputValue(input)
+  })
+  editedInputs.clear()
   requestFormat()
 }
 
 function requestFormat() {
-  vscode.postMessage({ type: 'formatCode', config: prettierConfig })
+  requestId++
+  if (!configReady || !validateInputs()) return
+  document.getElementById('previewStatus').textContent = '미리보기 갱신 중…'
+  vscode.postMessage({
+    type: 'formatCode',
+    config: prettierConfig,
+    language: document.getElementById('previewLanguage').value,
+    requestId,
+  })
+}
+
+function validateInputs() {
+  let valid = true
+  document.querySelectorAll('input[type="number"]').forEach((input) => {
+    const value = Number(input.value)
+    let error = ''
+    if (input.validity?.badInput) error = '정수를 입력해주세요.'
+    else if (input.dataset.option === 'rangeEnd' && !input.value.trim()) {
+      // Empty means the default, unbounded end of the document.
+    } else if (!input.value.trim() || !Number.isSafeInteger(value))
+      error = '정수를 입력해주세요.'
+    else if (input.min !== '' && value < Number(input.min))
+      error = `${input.min} 이상을 입력해주세요.`
+    else if (input.max !== '' && value > Number(input.max))
+      error = `${input.max} 이하를 입력해주세요.`
+    input.setAttribute('aria-invalid', String(Boolean(error)))
+    document.getElementById(`error-${input.dataset.option}`).textContent = error
+    if (error) valid = false
+  })
+  document.getElementById('applyButton').disabled =
+    !configReady || !configIsWritable || !valid
+  return valid
 }
 
 // 📌 설정 적용
 function applySettings() {
+  if (!configReady || !validateInputs()) return
   if (!configIsWritable) {
     showStatus(
       '현재 설정 파일은 자동 저장을 지원하지 않습니다. .prettierrc 또는 .prettierrc.json을 열어주세요.',
@@ -131,25 +196,31 @@ function getFileName(filePath) {
 }
 
 // 📌 포맷된 코드 업데이트
-function updateFormattedCode(code) {
+function updateFormattedCode(code, language) {
   const codeBlock = document.getElementById('formattedCode')
   codeBlock.textContent = code
-  hljs.highlightElement(codeBlock)
+  const highlightLanguage = { html: 'xml', vue: 'xml' }[language] || language
+  codeBlock.className = `language-${highlightLanguage}`
+  delete codeBlock.dataset.highlighted
+  if (typeof hljs !== 'undefined') hljs.highlightElement(codeBlock)
 }
 
 // 📌 입력 요소 생성
-function createInput(type, defaultValue, range, choices) {
+function createInput(type, defaultValue, range, choices, name) {
   if (type === 'boolean') {
     const checkbox = document.createElement('vscode-checkbox')
     checkbox.checked = defaultValue
     return checkbox
   }
   if (type === 'int') {
-    const textField = document.createElement('vscode-text-field')
+    const textField = document.createElement('input')
     textField.type = 'number'
-    textField.value = defaultValue
-    textField.min = range?.start || 0
-    textField.max = range?.end || 10
+    textField.value = Number.isFinite(defaultValue) ? defaultValue : ''
+    textField.step = '1'
+    textField.required = name !== 'rangeEnd'
+    if (name === 'rangeEnd') textField.placeholder = '제한 없음'
+    if (Number.isFinite(range?.start)) textField.min = range.start
+    if (Number.isFinite(range?.end)) textField.max = range.end
     return textField
   }
   if (type === 'choice') {
@@ -192,7 +263,8 @@ function getOptionHint(name, description) {
     arrowParens: '화살표 함수의 매개변수가 하나일 때 괄호를 붙일지 정합니다.',
     rangeStart:
       '파일 전체가 아니라 일부 범위만 포맷할 때 시작 위치를 지정합니다.',
-    rangeEnd: '파일 전체가 아니라 일부 범위만 포맷할 때 끝 위치를 지정합니다.',
+    rangeEnd:
+      '일부 범위를 포맷할 때 끝 위치를 지정합니다. 비워두면 파일 끝까지 포맷합니다.',
     requirePragma:
       '이 옵션을 활성화하면 Prettier는 파일 맨 위에 pragma가 포함된 파일만 포맷합니다.',
     insertPragma:
@@ -257,9 +329,9 @@ function hideOptionTooltip() {
 
 // 📌 입력값 가져오기
 function getInputValue(input) {
+  if (input.dataset.option === 'rangeEnd' && !input.value.trim()) return null
   if (input.tagName.toLowerCase() === 'vscode-checkbox') return input.checked
-  if (input.tagName.toLowerCase() === 'vscode-text-field')
-    return parseInt(input.value, 10)
+  if (input.tagName.toLowerCase() === 'input') return Number(input.value)
   return input.value
 }
 

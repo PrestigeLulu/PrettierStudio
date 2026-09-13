@@ -1,25 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prettier Studio</title>
-    <script type="module" src="{{toolkitUri}}"></script>
-    <script src="{{scriptUri}}"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css"
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'nonce-{{nonce}}'; style-src {{cspSource}} 'unsafe-inline'; font-src {{cspSource}}; img-src {{cspSource}} data:;"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <title>Prettier Studio</title>
+    <script nonce="{{nonce}}" type="module" src="{{toolkitUri}}"></script>
+    <script nonce="{{nonce}}" defer src="{{highlightUri}}"></script>
+    <script nonce="{{nonce}}" defer src="{{scriptUri}}"></script>
+    <link rel="stylesheet" href="{{highlightStyleUri}}" />
     <link rel="stylesheet" href="{{styleUri}}" />
   </head>
   <body>
     <div class="container">
       <div id="settings" class="settings overview">
         <div id="configStatus" class="config-status" data-level="info"></div>
-        <vscode-button id="applyButton" onclick="applySettings()">
-          Apply
-        </vscode-button>
+        <vscode-button id="applyButton" disabled> Apply </vscode-button>
       </div>
 
       <div
@@ -31,7 +30,18 @@
       ></div>
 
       <div class="code-preview overview">
-        <pre id="formattedCode">function(){}</pre>
+        <label for="previewLanguage">미리보기 언어</label>
+        <select id="previewLanguage">
+          <option value="javascript">JavaScript / JSX</option>
+          <option value="typescript">TypeScript</option>
+          <option value="html">HTML</option>
+          <option value="vue">Vue</option>
+          <option value="markdown">Markdown</option>
+          <option value="css">CSS</option>
+          <option value="json">JSON</option>
+        </select>
+        <div id="previewStatus" role="status" aria-live="polite"></div>
+        <pre id="formattedCode"></pre>
       </div>
     </div>
   </body>
