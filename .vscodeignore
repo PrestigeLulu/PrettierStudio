@@ -1,34 +1,16 @@
-# Dependencies
-node_modules/**
-!node_modules/
-!node_modules/@vscode/
-!node_modules/@vscode/webview-ui-toolkit/**
-
-# Source files
-src/**
+# Only ship runtime assets and package documentation.
+**
+!package.json
+!README.md
+!LICENSE
+!dist/extension.js
+!dist/toolkit.js
+!dist/*.LICENSE.txt
+!media/index.html
+!media/image.png
+!media/script.js
+!media/style.css
+!media/vendor/highlight.min.js
+!media/vendor/highlight.LICENSE
+!media/vendor/atom-one-dark.min.css
 dist/**/*.map
-
-# Development files
-.git/**
-.github/**
-.vscode/**
-.vscode-test/**
-.gitignore
-tsconfig.json
-webpack.config.js
-*.vsix
-
-# Documentation
-*.md
-CHANGELOG.md
-README.md
-
-# Test files
-test/**
-coverage/**
-
-# Misc
-.DS_Store
-**/.DS_Store
-.env
-.env.*

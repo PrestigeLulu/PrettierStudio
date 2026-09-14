@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-2.0.1-blue?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
+[![Version](https://img.shields.io/badge/version-2.0.5-blue?style=flat-square)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
 [![VS Marketplace](https://img.shields.io/badge/VS%20Marketplace-Prettier%20Studio-007ACC?style=flat-square&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=PrestigeLulu.prettier-studio)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 
@@ -79,7 +79,13 @@ Prettier Studio 사용 예시
 
 저장은 안전한 JSON 계열 설정 파일인 `.prettierrc`, `.prettierrc.json`에서 지원합니다. JS/YAML 설정 파일은 읽기 전용으로 불러옵니다.
 
-## 🆕 2.0.1
+## 🆕 2.0.5
+
+- esbuild로 확장 코드와 사용하는 웹뷰 컴포넌트를 압축 번들링
+- 배포 패키지에서 불필요한 의존성, 소스맵 및 개발 자료 제외
+- GitHub Actions의 Node.js 24 기반 액션 적용 및 배포 전 테스트 실행
+
+## 2.0.1
 
 - 기존 설정 보존 및 저장 충돌 감지
 - 여러 워크스페이스에서 대상 프로젝트와 설정 파일 선택 개선
@@ -96,6 +102,18 @@ Prettier Studio 사용 예시
 - 패널 너비 조정 기능 추가
 - 미리보기 코드와 옵션 툴팁 개선
 - 패키징 의존성 정리
+
+## 🛠 개발 및 패키징
+
+```sh
+yarn install --frozen-lockfile
+yarn compile  # 타입 검사 + 개발용 번들 (소스맵 포함)
+yarn test     # 기존 기능 테스트
+yarn build    # 타입 검사 + 배포용 압축 번들
+yarn package  # 배포용 빌드를 실행하고 VSIX 생성
+```
+
+확장 코드는 `dist/extension.js`, 사용하는 웹뷰 컴포넌트는 `dist/toolkit.js`로 esbuild 번들링합니다. VSIX에는 실행 파일, 웹뷰 리소스, 라이선스 및 README만 포함하며 `node_modules`, 소스맵, 테스트, 마케팅 자료는 제외합니다. Prettier는 실행 시 사용자의 워크스페이스에서 불러옵니다.
 
 ## 📄 라이선스
 

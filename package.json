@@ -10,7 +10,7 @@
   ],
   "icon": "./media/image.png",
   "repository": "https://github.com/PrestigeLulu/PrettierStudio",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "engines": {
     "vscode": "^1.120.0"
   },
@@ -18,10 +18,12 @@
   "author": "루루 <alsrb4171@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "compile": "tsc -p .",
-    "test": "npm run compile && node --test test/*.test.cjs",
-    "build": "yarn compile",
-    "vscode:prepublish": "yarn compile"
+    "check-types": "tsc -p . --noEmit",
+    "compile": "npm run check-types && node esbuild.mjs",
+    "test": "npm run compile && tsc -p . --outDir .test-dist && node --test test/*.test.cjs",
+    "build": "npm run check-types && node esbuild.mjs --production",
+    "package": "vsce package --no-dependencies",
+    "vscode:prepublish": "npm run build"
   },
   "activationEvents": [
     "onStartupFinished"
@@ -35,12 +37,12 @@
     ]
   },
   "devDependencies": {
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "@types/node": "^26.0.0",
     "@types/vscode": "1.120.0",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.2",
     "prettier": "^3.8.4",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@vscode/webview-ui-toolkit": "^1.4.0"
   }
 }

@@ -34,8 +34,6 @@ export function getWebviewContent(
         .asWebviewUri(
           vscode.Uri.joinPath(
             context.extensionUri,
-            'node_modules',
-            '@vscode/webview-ui-toolkit',
             'dist',
             'toolkit.js',
           ),

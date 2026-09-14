@@ -46,7 +46,7 @@ const {
   readPrettierConfig,
   savePrettierConfig,
   formatCode,
-} = require('../dist/utils/prettier.js')
+} = require('../.test-dist/utils/prettier.js')
 Module._load = originalLoad
 const log = { appendLine() {} }
 let serial = 0

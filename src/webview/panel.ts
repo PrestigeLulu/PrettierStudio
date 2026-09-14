@@ -35,7 +35,7 @@ export async function openSettingsPanel(
       enableScripts: true,
       retainContextWhenHidden: true,
       localResourceRoots: [
-        vscode.Uri.joinPath(context.extensionUri, 'node_modules'),
+        vscode.Uri.joinPath(context.extensionUri, 'dist'),
         vscode.Uri.joinPath(context.extensionUri, 'media'),
       ],
     },

@@ -13,10 +13,10 @@ Module._load = function (id, ...args) {
 const {
   formatCode,
   validateNumericOptions,
-} = require('../dist/utils/prettier.js')
-const { getWebviewContent } = require('../dist/webview/content.js')
+} = require('../.test-dist/utils/prettier.js')
+const { getWebviewContent } = require('../.test-dist/webview/content.js')
 Module._load = originalLoad
-const { PREVIEW_EXAMPLES } = require('../dist/constants/index.js')
+const { PREVIEW_EXAMPLES } = require('../.test-dist/constants/index.js')
 const prettier = require('prettier')
 const target = { workspacePath: path.resolve(__dirname, '..') }
 
